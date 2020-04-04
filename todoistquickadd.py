@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# encoding: utf-8
 
 # A quickly bodged-together Python script that will use Todoist's "quick add"
 # API method to add a new task (optionally to a specific project.) 
@@ -36,7 +37,7 @@ headers = {"Content-type": "application/x-www-form-urlencoded"}
 try:
     conn = httplib.HTTPSConnection("todoist.com")
     try:
-        conn.request("POST", "/API/v7/quick/add", params, headers)
+        conn.request("POST", "/API/v8/quick/add", params, headers)
         response = conn.getresponse()
         if response.status != 200:
             raise Exception("Got non-successful response code from Todoist: " + str(response.status))
