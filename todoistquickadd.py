@@ -2,48 +2,45 @@
 # encoding: utf-8
 
 # A quickly bodged-together Python script that will use Todoist's "quick add"
-# API method to add a new task (optionally to a specific project.) 
+# API method to add a new task (optionally to a specific project.)
 #
-# Works on macOS Sierra without any additional stuff installed, using 
+# Works on macOS Sierra without any additional stuff installed, using
 # the default Python 2.7 installation. This makes it easy to install and
 # use with an Alfred app workflow.
 #
 # All criticism welcome, but please bear in mind that this is my first Python
 # script :D
 
-import httplib, urllib, sys, argparse, json
+import httplib, urllib, sys, argparse, json, uuid, json
 
 parser = argparse.ArgumentParser(usage = "todoistquickadd [-t token] [-p project] task")
 parser.add_argument("-t", "--token", required = True)
-parser.add_argument("-p", "--project", help = "Target project")
+parser.add_argument("-p", "--projectid", required = True, help = "Target project ID (you can find this in the URL of the project page.)")
 parser.add_argument("task")
 args = parser.parse_args()
 
 token = args.token
-project = args.project
+projectid = args.projectid
 task = args.task
 
-# Todoist's "quick add" API uses the same syntax as Quick Add in the 
-# apps/web version: 
-# https://support.todoist.com/hc/en-us/articles/115001745265-Task-Quick-Add
-# ...so we can just tag #ProjectName on to the task string to add it 
-# to the "Project Name" project.
-if project:
-    task = task + " #" + project
+params = json.dumps({"content": task, "project_id": projectid })
 
-params = urllib.urlencode({'text': task, 'token': token})
-headers = {"Content-type": "application/x-www-form-urlencoded"}
+headers = {
+    "Content-type": "application/json",
+    "X-Request-Id": str(uuid.uuid4()),
+    "Authorization": "Bearer " + token
+}
 
 try:
-    conn = httplib.HTTPSConnection("todoist.com")
+    conn = httplib.HTTPSConnection("api.todoist.com")
     try:
-        conn.request("POST", "/API/v8/quick/add", params, headers)
+        conn.request("POST", "/rest/v2/tasks", params, headers)
         response = conn.getresponse()
         if response.status != 200:
             raise Exception("Got non-successful response code from Todoist: " + str(response.status))
         result = json.load(response)
-        print "Successfully added item " + result['content'] + ((" to " + project) if project else "")
-        
+        print 'Successfully added item ' + result['content'] + ((" to " + projectid) if projectid else "")
+
     finally:
         conn.close()
 
