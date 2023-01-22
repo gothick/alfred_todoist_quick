@@ -39,7 +39,7 @@ try:
         if response.status != 200:
             raise Exception("Got non-successful response code from Todoist: " + str(response.status))
         result = json.load(response)
-        print 'Successfully added item ' + result['content'] + ((" to " + projectid) if projectid else "")
+        print 'Successfully added item ' + result['content'] + ((" to project ID " + projectid) if projectid else "")
 
     finally:
         conn.close()
